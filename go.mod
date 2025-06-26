@@ -2,7 +2,7 @@ module github.com/buildpacks/imgutil
 
 require (
 	github.com/containerd/errdefs v1.0.0
-	github.com/docker/docker v28.2.2+incompatible
+	github.com/docker/docker v28.3.0+incompatible
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.20.6
 	github.com/moby/docker-image-spec v1.3.1
