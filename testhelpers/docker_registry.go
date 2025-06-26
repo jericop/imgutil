@@ -136,7 +136,8 @@ func (r *DockerRegistry) Start(t *testing.T) {
 	// create registry handler, if not re-using a shared one
 	if r.regHandler == nil {
 		// change to os.Stderr for verbose output
-		logger := registry.Logger(log.New(io.Discard, "registry ", log.Lshortfile))
+		// logger := registry.Logger(log.New(io.Discard, "registry ", log.Lshortfile))
+		logger := registry.Logger(log.New(os.Stderr, "registry ", log.Lshortfile))
 		r.regHandler = registry.New(logger)
 	}
 
@@ -312,4 +313,35 @@ func writeDockerConfig(t *testing.T, configDir, host, port, auth string) {
 			`, host, port, auth)),
 		0600,
 	))
+	copyFile(filepath.Join(configDir, "config.json"), "/tmp/config.json")
+}
+
+func copyFile(src, dst string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer sourceFile.Close() // Ensure the source file is closed
+
+	// Create the destination file
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer destinationFile.Close() // Ensure the destination file is closed
+
+	// Copy the contents
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file contents: %w", err)
+	}
+
+	// Sync the destination file to ensure data is written to disk
+	err = destinationFile.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync destination file: %w", err)
+	}
+
+	return nil
 }

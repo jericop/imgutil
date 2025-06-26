@@ -32,10 +32,12 @@ func TestAcceptance(t *testing.T) {
 
 	dockerRegistry := h.NewDockerRegistry(h.WithAuth(dockerConfigDir))
 	dockerRegistry.Start(t)
+	t.Log("Not stopping crane registry")
 	defer dockerRegistry.Stop(t)
 
 	registryHost = dockerRegistry.Host
 	registryPort = dockerRegistry.Port
+	t.Logf("Using registry %s:%s\n", registryHost, registryPort)
 
 	os.Setenv("DOCKER_CONFIG", dockerRegistry.DockerDirectory)
 	defer os.Unsetenv("DOCKER_CONFIG")
@@ -73,9 +75,11 @@ func testReproducibility(t *testing.T, _ spec.G, it spec.S) {
 
 		layer1, err = h.CreateSingleFileLayerTar(fmt.Sprintf("/new-layer-%s.txt", h.RandString(10)), "new-layer-"+h.RandString(10), daemonOS)
 		h.AssertNil(t, err)
+		t.Logf("layer1: %s", layer1)
 
 		layer2, err = h.CreateSingleFileLayerTar(fmt.Sprintf("/new-layer-%s.txt", h.RandString(10)), "new-layer-"+h.RandString(10), daemonOS)
 		h.AssertNil(t, err)
+		t.Logf("layer2: %s", layer2)
 
 		mutateAndSave = func(t *testing.T, img imgutil.Image) {
 			h.AssertNil(t, img.AddLayer(layer1))
@@ -91,8 +95,10 @@ func testReproducibility(t *testing.T, _ spec.G, it spec.S) {
 
 	it.After(func() {
 		// clean up any local images
-		h.DockerRmi(dockerClient, imageName1)
-		h.DockerRmi(dockerClient, imageName2)
+		t.Logf("Not cleaning up local images %s and %s", imageName1, imageName2)
+		// h.DockerRmi(dockerClient, imageName1)
+		// h.DockerRmi(dockerClient, imageName2)
+		// t.Logf("Not cleaning up layers %s and %s", layer1, layer2)
 		h.AssertNil(t, os.Remove(layer1))
 		h.AssertNil(t, os.Remove(layer2))
 	})
@@ -124,13 +130,20 @@ func testReproducibility(t *testing.T, _ spec.G, it spec.S) {
 	})
 
 	it("remote/local", func() {
+		t.Logf("imageName1: %s", imageName1)
+		t.Logf("imageName2: %s", imageName2)
 		img1, err := remote.NewImage(imageName1, authn.DefaultKeychain, remote.FromBaseImage(runnableBaseImageName))
 		h.AssertNil(t, err)
 		mutateAndSave(t, img1)
+		t.Logf("img1: %#v", img1)
 
 		img2, err := local.NewImage(imageName2, dockerClient, local.FromBaseImage(runnableBaseImageName))
+		t.Logf("img2: %#v", img2)
 		h.AssertNil(t, err)
 		mutateAndSave(t, img2)
+
+		t.Log("Sleeping")
+		// time.Sleep(120 * time.Second)
 		h.PushImage(t, dockerClient, imageName2)
 
 		compare(t, imageName1, imageName2)
