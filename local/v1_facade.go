@@ -151,6 +151,7 @@ func toV1Config(dockerCfg *dockerspec.DockerOCIImageConfig) v1.Config {
 		exposedPorts[key] = val
 	}
 	return v1.Config{
+		ArgsEscaped:  false,
 		Cmd:          dockerCfg.Cmd,
 		Healthcheck:  healthcheck,
 		Entrypoint:   dockerCfg.Entrypoint,
