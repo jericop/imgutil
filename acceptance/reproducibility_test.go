@@ -182,10 +182,12 @@ func compare(t *testing.T, img1, img2 string) {
 	cfg2.DockerVersion = ""
 	cfg1.Config.Image = ""
 	cfg2.Config.Image = ""
-	t.Logf("cfg: %#v", cfg1)
-	t.Logf("cfg: %#v", cfg2)
 
-	// h.AssertEq(t, cfg1, cfg2)
+	// ArgsEscaped is deprecated by docker/moby and is no longer set by imgutil, so we set it to false
+	cfg1.Config.ArgsEscaped = false
+	cfg2.Config.ArgsEscaped = false
+
+	h.AssertEq(t, cfg1, cfg2)
 
 	h.AssertEq(t, ref1.Identifier(), ref2.Identifier())
 }
